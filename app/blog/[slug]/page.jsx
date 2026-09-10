@@ -17,7 +17,9 @@ async function SlugTwo({ params }) {
     <div>
       <h1>Hi</h1>
       <h2>{slug}</h2>
-      <p>{data.level}</p>
+      <p>
+        {data.text}
+      </p>
     </div>
   )
 }
