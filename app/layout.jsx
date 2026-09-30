@@ -1,7 +1,7 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Yamaha Motor — Product Showcase",
+  title: "Afghan_Shosee — Product Showcase",
   description:
     "Premium motorcycle product showcase built with Next.js and Tailwind CSS.",
 };
