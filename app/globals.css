@@ -1,0 +1,82 @@
+@import "tailwindcss";
+
+@theme {
+  --color-gold: #c9bc91;
+  --color-deep: #07110f;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  background: #050908;
+  color: white;
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: #c9bc91;
+  color: #07110f;
+}
+
+/* Motorcycle slide animation */
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(70px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes slideInReverse {
+  from {
+    opacity: 0;
+    transform: translateX(-70px) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+/* Better image rendering */
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* Scrollbar */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050908;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #263a34;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #c9bc91;
+}
