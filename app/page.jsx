@@ -1,550 +1,387 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useState } from 'react';
+import { translations } from './translations';
 
-// ── Online image sources (swap here, used everywhere below) ──
-const images = {
-  bike: "https://images.unsplash.com/photo-1558981403-c5f9899a28bc?auto=format&fit=crop&w=1200&q=80",
-  feature1: "https://images.unsplash.com/photo-1449426468159-d96dbf08f19f?auto=format&fit=crop&w=1200&q=80",
-  feature2: "https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?auto=format&fit=crop&w=1200&q=80",
-  feature3: "https://images.unsplash.com/photo-1591637333184-19aa84b3e01f?auto=format&fit=crop&w=1200&q=80",
-  rider: "https://images.unsplash.com/photo-1558980664-10eaad4fdb55?auto=format&fit=crop&w=1600&q=80",
-  building: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=1200&q=80",
-};
+export default function AfghanShosee() {
+  const [lang, setLang] = useState('en');
+  const t = translations[lang];
+  const isRTL = lang === 'fa' || lang === 'ps';
 
-const models = [
-  {
-    name: "AEROX",
-    subtitle: "CONNECTED ABS",
-    year: "2022",
-    price: "Rp 30,3 Juta",
-    image: images.bike,
-  },
-  {
-    name: "AEROX",
-    subtitle: "155 VVA",
-    year: "2022",
-    price: "Rp 27,5 Juta",
-    image: images.bike,
-  },
-  {
-    name: "NMAX",
-    subtitle: "CONNECTED",
-    year: "2022",
-    price: "Rp 32,0 Juta",
-    image: images.bike,
-  },
-];
+  // --- Carousel State ---
+  const sneakerImages = [
+    "/images/pngwing.com (4).png",
+    "/images/pngwing.com (5).png",
+    "/images/pngwing.com (6).png",
+    "/images/pngwing.com.png",
+    "/images/pngwing.com (2).png",
+    "/images/pngwing.com (1).png"
+  ];
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
-const features = [
-  {
-    title: "CONNECTED ABS",
-    description: "Advanced braking technology for confident riding.",
-    image: images.feature1,
-  },
-  {
-    title: "SMART STORAGE",
-    description: "Practical storage designed for everyday riding.",
-    image: images.feature2,
-  },
-  {
-    title: "SPORT DESIGN",
-    description: "Sharp lines and an aggressive premium silhouette.",
-    image: images.feature3,
-  },
-];
+  const nextImage = () => setCurrentImageIndex((prev) => (prev + 1) % sneakerImages.length);
+  const prevImage = () => setCurrentImageIndex((prev) => (prev - 1 + sneakerImages.length) % sneakerImages.length);
 
-const navigation = [
-  ["DEALER", "#dealer"],
-  ["PRODUCT", "#product"],
-  ["PARTS & WEAR", "#features"],
-  ["ABOUT US", "#about"],
-];
+  // --- Cart & Wishlist Logic ---
+  const [selectedSize, setSelectedSize] = useState(null);
+  const [notification, setNotification] = useState("");
 
-function Header({ active = "PRODUCT" }) {
+  // Current product data (static for now, but includes selected size)
+  const getProductData = () => ({
+    id: 'peshawari-chappal-1',
+    name: t.hero.title,
+    price: 85,
+    image: sneakerImages[currentImageIndex],
+    size: selectedSize || 'N/A',
+  });
+
+  const handleAddToCart = () => {
+    if (!selectedSize) {
+      alert(lang === 'en' ? "Please select a size first!" : lang === 'fa' ? "لطفاً ابتدا سایز را انتخاب کنید!" : "مهرباني وکړئ لومړی اندازه وټاکئ!");
+      return;
+    }
+    
+    const product = getProductData();
+    const existingCart = JSON.parse(localStorage.getItem('cart') || '[]');
+    
+    // Check if item already exists with the same size
+    const existingItemIndex = existingCart.findIndex(item => item.id === product.id && item.size === product.size);
+    
+    if (existingItemIndex > -1) {
+      existingCart[existingItemIndex].quantity += 1;
+    } else {
+      existingCart.push({ ...product, quantity: 1 });
+    }
+    
+    localStorage.setItem('cart', JSON.stringify(existingCart));
+    setNotification(t.cart.added);
+    setTimeout(() => setNotification(""), 3000);
+  };
+
+  const handleAddToWishlist = () => {
+    const product = getProductData();
+    // Remove size for wishlist
+    const { size, ...wishlistProduct } = product; 
+    const existingWishlist = JSON.parse(localStorage.getItem('wishlist') || '[]');
+    
+    // Check if already in wishlist
+    if (!existingWishlist.find(item => item.id === wishlistProduct.id)) {
+      existingWishlist.push(wishlistProduct);
+      localStorage.setItem('wishlist', JSON.stringify(existingWishlist));
+    }
+    
+    setNotification(t.cart.added);
+    setTimeout(() => setNotification(""), 3000);
+  };
+
   return (
-    <header className="absolute left-0 right-0 top-0 z-50">
-      <div className="flex h-[82px] items-center justify-between px-6 md:pl-24 md:pr-10">
-        <a
-          href="#product"
-          className="text-[26px] font-black tracking-[-0.06em] text-white"
-        >
-          YAMAHA
-        </a>
+    <div className="w-full bg-[#151515] text-white font-sans overflow-x-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
+      
+      {/* Notification Toast */}
+      {notification && (
+        <div className="fixed top-24 left-1/2 -translate-x-1/2 z-50 bg-[#b8573e] text-white px-6 py-3 rounded-full text-sm font-bold shadow-lg animate-in fade-in slide-in-from-top-4">
+          {notification}
+        </div>
+      )}
 
-        <nav className="hidden items-center gap-8 md:flex">
-          {navigation.map(([label, href]) => (
-            <a
-              key={label}
-              href={href}
-              className={`relative text-[10px] font-semibold tracking-wide transition ${
-                active === label
-                  ? "text-white"
-                  : "text-white/55 hover:text-white"
-              }`}
-            >
-              {label}
+      {/* ==========================================
+          SECTION 1: HERO SECTION
+      ========================================== */}
+      <section className="relative min-h-screen flex flex-col overflow-hidden">
+        <div className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] bg-[#b8573e] rounded-full blur-3xl opacity-30 mix-blend-screen pointer-events-none z-0"></div>
+        <div className="absolute bottom-0 right-0 w-[50vw] h-[60vh] bg-[#f4ebd9] rounded-tl-[100%] pointer-events-none z-0"></div>
+        <div className="absolute bottom-0 left-0 w-[40vw] h-[40vh] bg-[#222222] rounded-tr-[100%] pointer-events-none z-0"></div>
 
-              {active === label && (
-                <span className="absolute -bottom-2 left-1/2 h-[2px] w-5 -translate-x-1/2 bg-[#c9bc91]" />
-              )}
+        {/* Navigation */}
+        <nav className="relative z-20 flex justify-between items-center px-8 py-6 md:px-16 lg:px-24">
+          <div className="flex items-center gap-2 cursor-pointer">
+            <span className="text-[#b8573e] font-bold text-xl">//</span>
+            <span className="font-bold tracking-widest text-sm uppercase text-white">Afghan Shosee</span>
+          </div>
+
+          <div className="hidden md:flex items-center gap-8 text-[11px] font-semibold tracking-widest uppercase text-gray-400">
+            <a href="#features" className="hover:text-white transition-colors">{t.nav.features}</a>
+            <a href="#details" className="hover:text-white transition-colors">{t.nav.heritage}</a>
+            <a href="#reviews" className="hover:text-white transition-colors">{t.nav.reviews}</a>
+            <a href="/cart" className="hover:text-white transition-colors">{t.nav.shop}</a>
+            <a href="#" className="hover:text-white transition-colors">{t.nav.contact}</a>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex gap-2 text-[10px] font-bold tracking-widest uppercase text-gray-400 border border-gray-700 rounded-full px-3 py-1">
+              <button onClick={() => setLang('en')} className={`hover:text-white transition-colors ${lang === 'en' ? 'text-[#b8573e]' : ''}`}>EN</button>
+              <span className="text-gray-600">|</span>
+              <button onClick={() => setLang('fa')} className={`hover:text-white transition-colors ${lang === 'fa' ? 'text-[#b8573e]' : ''}`}>دری</button>
+              <span className="text-gray-600">|</span>
+              <button onClick={() => setLang('ps')} className={`hover:text-white transition-colors ${lang === 'ps' ? 'text-[#b8573e]' : ''}`}>پښتو</button>
+            </div>
+            
+            {/* Cart Icon Link */}
+            <a href="/cart" className="w-8 h-8 rounded-full bg-[#b8573e] flex items-center justify-center hover:bg-[#a04a32] transition-colors relative">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
             </a>
-          ))}
-
-          <button className="text-[10px] text-white/60">ENG⌄</button>
+          </div>
         </nav>
 
-        <button className="md:hidden">
-          <div className="space-y-1.5">
-            <span className="block h-[2px] w-6 bg-white" />
-            <span className="block h-[2px] w-6 bg-white" />
-            <span className="block h-[2px] w-6 bg-white" />
-          </div>
-        </button>
-      </div>
-    </header>
-  );
-}
-
-function SideRail() {
-  return (
-    <aside className="absolute bottom-0 left-0 top-0 z-40 hidden w-[64px] border-r border-white/[0.06] bg-black/10 backdrop-blur-sm md:block">
-      <div className="flex h-full flex-col items-center pt-7">
-        <button aria-label="Menu" className="flex flex-col gap-[5px]">
-          <span className="h-[2px] w-5 bg-white" />
-          <span className="h-[2px] w-5 bg-white" />
-          <span className="h-[2px] w-5 bg-white" />
-        </button>
-
-        <div className="mt-16 flex flex-col gap-7 text-[13px] font-bold text-white/60">
-          <a href="#" className="transition hover:text-white">◎</a>
-          <a href="#" className="transition hover:text-white">𝕏</a>
-          <a href="#" className="transition hover:text-white">f</a>
-        </div>
-      </div>
-    </aside>
-  );
-}
-
-function ProductHero() {
-  const [current, setCurrent] = useState(0);
-  const [direction, setDirection] = useState(1);
-
-  const model = models[current];
-
-  const next = () => {
-    setDirection(1);
-    setCurrent((value) => (value + 1) % models.length);
-  };
-
-  const previous = () => {
-    setDirection(-1);
-    setCurrent((value) => (value - 1 + models.length) % models.length);
-  };
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setDirection(1);
-      setCurrent((value) => (value + 1) % models.length);
-    }, 7000);
-
-    return () => clearInterval(timer);
-  }, []);
-
-  return (
-    <section
-      id="product"
-      className="relative min-h-screen overflow-hidden bg-[#07110f]"
-    >
-      <SideRail />
-      <Header />
-
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_28%_30%,rgba(42,105,89,.55),transparent_34%),radial-gradient(circle_at_78%_60%,rgba(22,57,49,.5),transparent_38%),linear-gradient(135deg,#173e35,#07110f_65%)]" />
-
-      <div className="absolute left-[22%] top-[20%] h-[400px] w-[400px] rounded-full bg-[#5aa493]/10 blur-[120px]" />
-
-      <div
-        key={model.year + current}
-        className="pointer-events-none absolute left-[13%] top-[13%] select-none text-[130px] font-black leading-none tracking-[-0.08em] text-white/[0.075] sm:text-[190px] md:text-[290px]"
-      >
-        {model.year}
-      </div>
-
-      <div className="relative z-10 mx-auto flex min-h-screen max-w-[1400px] items-center px-8 pb-36 pt-28 md:pl-28 md:pr-14">
-        <div className="grid w-full items-center gap-10 md:grid-cols-[1.2fr_.8fr]">
-          <div className="relative flex min-h-[400px] items-center justify-center md:min-h-[600px]">
-            <div className="absolute h-[270px] w-[270px] rounded-full bg-[#7aa99b]/10 blur-[90px]" />
-
-            <button
-              onClick={previous}
-              aria-label="Previous motorcycle"
-              className="absolute left-0 z-30 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/10 text-4xl text-white/40 backdrop-blur-md transition hover:border-white/30 hover:text-white md:left-2"
-            >
-              ‹
-            </button>
-
-            <img
-              key={`${model.image}-${current}`}
-              src={model.image}
-              alt={model.name}
-              className={`relative z-10 w-[90%] max-w-[680px] object-contain drop-shadow-[0_40px_50px_rgba(0,0,0,.75)] transition-all duration-700 ${
-                direction === 1
-                  ? "animate-[slideIn_.7s_ease-out]"
-                  : "animate-[slideInReverse_.7s_ease-out]"
-              }`}
-            />
-
-            <button
-              onClick={next}
-              aria-label="Next motorcycle"
-              className="absolute right-0 z-30 flex h-12 w-12 items-center justify-center rounded-full border border-white/10 bg-black/10 text-4xl text-white/40 backdrop-blur-md transition hover:border-white/30 hover:text-white md:right-2"
-            >
-              ›
-            </button>
-          </div>
-
-          <div className="max-w-[520px]">
-            <div className="mb-4 flex items-center gap-3">
-              <span className="h-px w-8 bg-[#c9bc91]" />
-              <span className="text-[9px] font-semibold uppercase tracking-[.35em] text-white/50">
-                Yamaha Motor
+        {/* Hero Content */}
+        <div className={`relative z-10 flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 px-8 md:px-16 lg:px-24 items-center pb-12 ${isRTL ? 'text-right' : 'text-left'}`}>
+          
+          <div className={`flex flex-col justify-center max-w-lg mt-12 lg:mt-0 order-2 lg:order-1 ${isRTL ? 'items-end' : 'items-start'}`}>
+            <div className="flex items-center gap-3 mb-4">
+              <span className="bg-[#b8573e]/20 text-[#b8573e] text-[10px] font-bold tracking-widest uppercase px-3 py-1 rounded-full border border-[#b8573e]/30">
+                {t.hero.badge}
               </span>
+              <div className="flex items-center gap-1">
+                <span className="text-yellow-500 text-xs">★★★★★</span>
+                <span className="text-gray-400 text-[10px]">(4.9 / 1,200)</span>
+              </div>
             </div>
-
-            <h1 className="text-5xl font-black uppercase leading-[.88] tracking-[-.05em] sm:text-6xl md:text-7xl">
-              {model.name}
+            
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-[#e5d3b3] leading-[1.1] mb-6 uppercase tracking-tight">
+              {t.hero.title}
             </h1>
+            
+            <p className="text-gray-400 text-sm leading-relaxed mb-6">
+              {t.hero.desc}
+            </p>
 
-            <h2 className="mt-2 text-4xl font-black uppercase leading-none tracking-[-.03em] text-[#c9bc91] sm:text-5xl md:text-6xl">
-              {model.subtitle}
-            </h2>
-
-            <div className="mt-8">
-              <p className="text-[9px] uppercase tracking-[.25em] text-white/45">
-                Base price
-              </p>
-              <p className="mt-1 text-2xl font-bold text-white">
-                {model.price}
-              </p>
-            </div>
-
-            <div className="mt-7 flex flex-wrap gap-3">
-              <a
-                href="#dealer"
-                className="group flex items-center gap-4 rounded-md border border-[#c9bc91] px-6 py-3 text-[10px] font-bold uppercase tracking-wide text-white transition hover:bg-[#c9bc91] hover:text-[#07110f]"
-              >
-                Find a dealer
-                <span className="transition group-hover:translate-x-1">→</span>
-              </a>
-
-              <a
-                href="#features"
-                className="rounded-md border border-white/10 bg-white/[0.04] px-6 py-3 text-[10px] font-bold uppercase tracking-wide text-white/70 backdrop-blur-md transition hover:bg-white/[0.09] hover:text-white"
-              >
-                Explore
-              </a>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="absolute bottom-[90px] left-0 right-0 z-20">
-        <div className="mx-auto flex max-w-[1400px] gap-7 px-8 md:pl-28">
-          {["TOP FEATURES", "GALLERY", "SPECS", "ACCESSORIES"].map((item) => (
-            <a
-              key={item}
-              href="#features"
-              className="text-[9px] font-semibold uppercase tracking-wide text-white/55 transition hover:text-white"
-            >
-              + {item}
-            </a>
-          ))}
-        </div>
-      </div>
-
-      <div className="absolute bottom-0 left-0 right-0 z-30 border-t border-white/[0.06] bg-black/20 backdrop-blur-md">
-        <div className="mx-auto flex h-[70px] max-w-[1400px] items-center justify-between px-8 md:pl-28 md:pr-12">
-          <button
-            onClick={previous}
-            className="text-[11px] text-white/50 transition hover:text-white"
-          >
-            ‹ &nbsp; {models[(current - 1 + models.length) % models.length].name}
-          </button>
-
-          <div className="flex items-center gap-2">
-            {models.map((item, index) => (
-              <button
-                key={item.name}
-                onClick={() => {
-                  setDirection(index > current ? 1 : -1);
-                  setCurrent(index);
-                }}
-                aria-label={`Select ${item.name}`}
-                className={`h-1.5 rounded-full transition-all duration-300 ${
-                  index === current
-                    ? "w-7 bg-[#c9bc91]"
-                    : "w-1.5 bg-white/25 hover:bg-white/60"
-                }`}
-              />
-            ))}
-          </div>
-
-          <button
-            onClick={next}
-            className="text-[11px] text-white/50 transition hover:text-white"
-          >
-            {models[(current + 1) % models.length].name} &nbsp;›
-          </button>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function Features() {
-  const [current, setCurrent] = useState(0);
-
-  const previous = () => {
-    setCurrent((value) => (value - 1 + features.length) % features.length);
-  };
-
-  const next = () => {
-    setCurrent((value) => (value + 1) % features.length);
-  };
-
-  const left = features[(current - 1 + features.length) % features.length];
-  const right = features[(current + 1) % features.length];
-  const active = features[current];
-
-  return (
-    <section
-      id="features"
-      className="relative min-h-screen overflow-hidden bg-[#07110f]"
-    >
-      <SideRail />
-      <Header />
-
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_40%,rgba(40,91,78,.35),transparent_35%),linear-gradient(135deg,#102b25,#050b0a)]" />
-
-      <div className="relative z-10 flex min-h-screen flex-col items-center justify-center px-5 pb-28 pt-28">
-        <div className="mb-8 text-center">
-          <p className="text-[9px] uppercase tracking-[.4em] text-[#c9bc91]">
-            Technology & Design
-          </p>
-          <h2 className="mt-3 text-4xl font-black uppercase tracking-[-.04em] md:text-6xl">
-            Top features
-          </h2>
-        </div>
-
-        <div className="relative flex w-full max-w-[1250px] items-center justify-center gap-3 md:gap-7">
-          <button
-            onClick={previous}
-            aria-label="Previous feature"
-            className="z-20 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-black/20 text-3xl text-white/50 backdrop-blur-md transition hover:border-white/30 hover:text-white"
-          >
-            ‹
-          </button>
-
-          <div className="hidden w-[250px] overflow-hidden rounded-3xl opacity-45 md:block">
-            <img
-              src={left.image}
-              alt={left.title}
-              className="h-[180px] w-full object-cover"
-            />
-          </div>
-
-          <div className="group relative w-full max-w-[650px] overflow-hidden rounded-[28px] border border-white/10 bg-black/20 shadow-[0_40px_100px_rgba(0,0,0,.5)]">
-            <img
-              key={active.image + current}
-              src={active.image}
-              alt={active.title}
-              className="aspect-[16/9] w-full object-cover transition-transform duration-700 group-hover:scale-105"
-            />
-
-            <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent p-6 pt-20">
-              <div className="text-[10px] uppercase tracking-[.3em] text-[#c9bc91]">
-                0{current + 1}
+            {/* Color & Size Selectors */}
+            <div className={`space-y-4 mb-8 w-full ${isRTL ? 'text-right' : 'text-left'}`}>
+              <div>
+                <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase block mb-2">{t.hero.color}</span>
+                <div className={`flex gap-3 ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                  <div className="w-6 h-6 rounded-full bg-[#b8573e] ring-2 ring-offset-2 ring-offset-[#151515] ring-[#b8573e] cursor-pointer"></div>
+                  <div className="w-6 h-6 rounded-full bg-[#4a3b32] cursor-pointer hover:ring-2 hover:ring-offset-2 hover:ring-offset-[#151515] hover:ring-gray-500 transition-all"></div>
+                  <div className="w-6 h-6 rounded-full bg-[#d4c3a3] cursor-pointer hover:ring-2 hover:ring-offset-2 hover:ring-offset-[#151515] hover:ring-gray-500 transition-all"></div>
+                </div>
               </div>
 
-              <h3 className="mt-1 text-2xl font-black uppercase">
-                {active.title}
-              </h3>
+              <div>
+                <span className="text-[10px] font-bold tracking-widest text-gray-400 uppercase block mb-2">{t.hero.size}</span>
+                <div className={`flex gap-2 flex-wrap ${isRTL ? 'justify-end' : 'justify-start'}`}>
+                  {['7', '8', '9', '10', '11', '12'].map((size) => (
+                    <button 
+                      key={size} 
+                      onClick={() => setSelectedSize(size)}
+                      className={`w-10 h-10 border text-xs font-bold flex items-center justify-center rounded transition-colors ${
+                        selectedSize === size 
+                          ? 'border-[#b8573e] bg-[#b8573e] text-white' 
+                          : 'border-gray-700 text-gray-400 hover:border-[#b8573e] hover:text-[#b8573e]'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
 
-              <p className="mt-1 max-w-md text-xs text-white/60">
-                {active.description}
-              </p>
+            <div className={`flex gap-4 items-center mb-12 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <button 
+                onClick={handleAddToCart}
+                className="bg-[#b8573e] hover:bg-[#a04a32] text-white text-[11px] font-bold tracking-widest uppercase py-4 px-8 rounded-full transition-all duration-300 flex-1 md:flex-none"
+              >
+                {t.hero.cart}
+              </button>
+              <button 
+                onClick={handleAddToWishlist}
+                className="border border-gray-600 hover:border-white text-white text-[11px] font-bold tracking-widest uppercase py-4 px-8 rounded-full transition-all duration-300"
+              >
+                {t.hero.wishlist}
+              </button>
+            </div>
+
+            {/* Trust Badges */}
+            <div className={`flex gap-8 border-t border-gray-800 pt-6 w-full ${isRTL ? 'flex-row-reverse text-right' : ''}`}>
+              <div className="flex flex-col gap-1">
+                <span className={`text-[10px] font-bold uppercase tracking-widest text-white flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <svg className="w-3 h-3 text-[#b8573e]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                  {t.hero.shipping}
+                </span>
+                <span className="text-[9px] text-gray-500 uppercase">{t.hero.shippingSub}</span>
+              </div>
+              <div className="flex flex-col gap-1">
+                <span className={`text-[10px] font-bold uppercase tracking-widest text-white flex items-center gap-2 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <svg className="w-3 h-3 text-[#b8573e]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                  {t.hero.returns}
+                </span>
+                <span className="text-[9px] text-gray-500 uppercase">{t.hero.returnsSub}</span>
+              </div>
             </div>
           </div>
 
-          <div className="hidden w-[250px] overflow-hidden rounded-3xl opacity-45 md:block">
-            <img
-              src={right.image}
-              alt={right.title}
-              className="h-[180px] w-full object-cover"
-            />
-          </div>
+          {/* Right Column: Interactive Sneaker Carousel */}
+          <div className="relative flex flex-col justify-center items-center h-[400px] lg:h-[700px] w-full mt-12 lg:mt-0 order-1 lg:order-2">
+            <div className="relative w-full h-full flex justify-center items-center">
+              <img 
+                key={currentImageIndex} 
+                src={sneakerImages[currentImageIndex]} 
+                alt={`Afghan Shosee Product ${currentImageIndex + 1}`} 
+                className="relative z-20 w-[110%] max-w-[700px] object-contain drop-shadow-[0_35px_35px_rgba(0,0,0,0.8)] transform -rotate-12 lg:scale-110 transition-all duration-500 ease-in-out animate-in fade-in zoom-in-95"
+              />
+              {currentImageIndex === 0 && (
+                <img 
+                  src="https://images.unsplash.com/photo-1506801326067-54c94d19d4cb?q=80&w=400&auto=format&fit=crop" 
+                  alt="Autumn Leaf" 
+                  className="absolute bottom-[5%] right-[5%] z-30 w-32 md:w-56 object-contain mix-blend-multiply drop-shadow-2xl opacity-90 transition-opacity duration-500"
+                />
+              )}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[80%] h-[80%] border border-gray-600/30 rounded-full z-0 pointer-events-none"></div>
+            </div>
 
-          <button
-            onClick={next}
-            aria-label="Next feature"
-            className="z-20 flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-black/20 text-3xl text-white/50 backdrop-blur-md transition hover:border-white/30 hover:text-white"
-          >
-            ›
-          </button>
-        </div>
-
-        <div className="mt-7 flex items-center gap-2">
-          {features.map((item, index) => (
-            <button
-              key={item.title}
-              onClick={() => setCurrent(index)}
-              className={`h-1.5 rounded-full transition-all ${
-                current === index ? "w-8 bg-[#c9bc91]" : "w-1.5 bg-white/30"
-              }`}
-            />
-          ))}
-        </div>
-
-        <p className="mt-4 text-[8px] uppercase tracking-[.3em] text-white/35">
-          Tap to explore
-        </p>
-      </div>
-    </section>
-  );
-}
-
-function About() {
-  return (
-    <section id="about" className="relative overflow-hidden bg-[#070d0c]">
-      <SideRail />
-
-      <div className="relative h-[350px] overflow-hidden md:ml-16">
-        <img
-          src={images.rider}
-          alt="Yamaha motorcycle rider"
-          className="absolute inset-0 h-full w-full object-cover"
-        />
-
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-black/10" />
-
-        <Header active="ABOUT US" />
-
-        <div className="absolute bottom-10 left-8 md:left-12">
-          <p className="text-[9px] uppercase tracking-[.4em] text-[#c9bc91]">
-            Yamaha Motor
-          </p>
-          <h2 className="mt-2 text-6xl font-black tracking-[-.06em] md:text-8xl">
-            YAMAHA
-          </h2>
-        </div>
-      </div>
-
-      <div className="mx-auto grid max-w-[1200px] gap-14 px-8 py-20 md:ml-16 md:grid-cols-[1fr_330px] md:px-12">
-        <div>
-          <p className="text-[9px] uppercase tracking-[.35em] text-[#c9bc91]">
-            About the brand
-          </p>
-
-          <h3 className="mt-4 text-4xl font-light uppercase leading-none md:text-6xl">
-            Move
-            <br />
-            your
-            <br />
-            heart.
-          </h3>
-
-          <div className="mt-8 max-w-xl space-y-5 text-sm leading-7 text-white/55">
-            <p>
-              Yamaha Motor develops motorcycles that combine performance,
-              technology and distinctive design.
-            </p>
-            <p>
-              From everyday mobility to sport riding, every model is designed
-              around the connection between rider and machine.
-            </p>
-          </div>
-        </div>
-
-        <div>
-          <div className="overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03]">
-            <img
-              src={images.building}
-              alt="Yamaha building"
-              className="aspect-[4/3] w-full object-cover"
-            />
-
-            <div className="p-5">
-              <p className="text-[9px] uppercase tracking-[.2em] text-[#c9bc91]">
-                Indonesia
-              </p>
-              <h4 className="mt-2 text-sm font-bold uppercase">
-                Manufaktur Motor Yamaha Indonesia
-              </h4>
-              <p className="mt-3 text-[10px] leading-5 text-white/45">
-                021 2457 5555
-                <br />
-                Jakarta Timur, Indonesia
-              </p>
+            <div className="absolute bottom-0 lg:bottom-10 z-40 flex items-center gap-6 bg-[#1a1a1a]/80 backdrop-blur-md px-6 py-3 rounded-full border border-gray-700">
+              <button onClick={prevImage} className="text-gray-400 hover:text-white transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+              </button>
+              <div className="flex gap-2">
+                {sneakerImages.map((_, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setCurrentImageIndex(index)}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                      index === currentImageIndex ? 'bg-[#b8573e] w-6' : 'bg-gray-600 hover:bg-gray-400'
+                    }`}
+                  />
+                ))}
+              </div>
+              <button onClick={nextImage} className="text-gray-400 hover:text-white transition-colors">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+              </button>
             </div>
           </div>
         </div>
-      </div>
-    </section>
-  );
-}
+      </section>
 
-function Dealer() {
-  const cities = ["Jakarta", "Bandung", "Surabaya"];
-
-  return (
-    <section
-      id="dealer"
-      className="relative overflow-hidden bg-[#050908] px-8 py-24 md:pl-28"
-    >
-      <div className="mx-auto max-w-[1200px]">
-        <p className="text-[9px] uppercase tracking-[.4em] text-[#c9bc91]">
-          Yamaha Dealer Network
-        </p>
-
-        <h2 className="mt-3 text-5xl font-black uppercase tracking-[-.05em] md:text-7xl">
-          Find your
-          <br />
-          dealer.
-        </h2>
-
-        <div className="mt-12 grid gap-4 md:grid-cols-3">
-          {cities.map((city, index) => (
-            <a
-              href="#"
-              key={city}
-              className="group relative overflow-hidden rounded-2xl border border-white/10 bg-white/[0.025] p-7 transition duration-500 hover:-translate-y-1 hover:border-[#c9bc91]/40 hover:bg-white/[0.05]"
-            >
-              <span className="text-[9px] text-white/30">0{index + 1}</span>
-
-              <h3 className="mt-10 text-2xl font-bold uppercase">{city}</h3>
-
-              <p className="mt-2 text-[10px] text-white/40">
-                Explore available dealers
+      {/* ==========================================
+          SECTION 2: FEATURES
+      ========================================== */}
+      <section id="features" className="py-24 px-8 md:px-16 lg:px-24 bg-[#111111] relative z-20">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-black text-[#e5d3b3] uppercase tracking-tight mb-4">{t.features.title}</h2>
+          <p className="text-gray-400 text-sm max-w-2xl mx-auto">{t.features.desc}</p>
+        </div>
+        <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 ${isRTL ? 'text-right' : 'text-left'}`}>
+          {[t.features.f1Title, t.features.f2Title, t.features.f3Title].map((title, i) => (
+            <div key={i} className="bg-[#1a1a1a] p-8 rounded-2xl border border-gray-800 hover:border-[#b8573e]/50 transition-colors group">
+              <div className={`w-12 h-12 bg-[#b8573e]/10 rounded-full flex items-center justify-center mb-6 group-hover:bg-[#b8573e]/20 transition-colors ${isRTL ? 'ml-auto' : ''}`}>
+                {i === 0 && <svg className="w-6 h-6 text-[#b8573e]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>}
+                {i === 1 && <svg className="w-6 h-6 text-[#b8573e]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>}
+                {i === 2 && <svg className="w-6 h-6 text-[#b8573e]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>}
+              </div>
+              <h3 className="text-lg font-bold text-white mb-3 uppercase tracking-wide">{title}</h3>
+              <p className="text-gray-400 text-xs leading-relaxed">
+                {i === 0 ? t.features.f1Desc : i === 1 ? t.features.f2Desc : t.features.f3Desc}
               </p>
-
-              <span className="absolute bottom-7 right-7 text-xl text-[#c9bc91] transition group-hover:translate-x-2">
-                →
-              </span>
-            </a>
+            </div>
           ))}
         </div>
-      </div>
-    </section>
-  );
-}
+      </section>
 
-export default function Page() {
-  return (
-    <main className="overflow-hidden">
-      <ProductHero />
-      <Features />
-      <About />
-      <Dealer />
-    </main>
+      {/* ==========================================
+          SECTION 3: DETAILS / HERITAGE
+      ========================================== */}
+      <section id="details" className="py-24 px-8 md:px-16 lg:px-24 bg-[#151515] relative z-20">
+        <div className={`grid grid-cols-1 lg:grid-cols-2 gap-16 items-center ${isRTL ? 'text-right' : 'text-left'}`}>
+          <div className="grid grid-cols-2 gap-4">
+            <img src="https://images.unsplash.com/photo-1608231387042-66d1773070a5?q=80&w=800&auto=format&fit=crop" alt="Detail 1" className="w-full h-64 object-cover rounded-2xl grayscale hover:grayscale-0 transition-all duration-500" />
+            <img src="https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?q=80&w=800&auto=format&fit=crop" alt="Detail 2" className="w-full h-64 object-cover rounded-2xl mt-8" />
+            <img src="https://images.unsplash.com/photo-1549298916-b41d501d3772?q=80&w=800&auto=format&fit=crop" alt="Detail 3" className="w-full h-64 object-cover rounded-2xl -mt-8" />
+            <img src="https://images.unsplash.com/photo-1512374382149-233c42b6a83b?q=80&w=800&auto=format&fit=crop" alt="Detail 4" className="w-full h-64 object-cover rounded-2xl" />
+          </div>
+          <div>
+            <h2 className="text-3xl md:text-4xl font-black text-[#e5d3b3] uppercase tracking-tight mb-6">{t.heritage.title}</h2>
+            <p className="text-gray-400 text-sm leading-relaxed mb-6">{t.heritage.desc}</p>
+            <ul className="space-y-4 mb-8">
+              {[t.heritage.item1Title, t.heritage.item2Title, t.heritage.item3Title].map((title, i) => (
+                <li key={i} className={`flex items-start gap-3 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#b8573e] mt-1.5 shrink-0"></div>
+                  <div>
+                    <h4 className="text-white text-sm font-bold uppercase tracking-wider">{title}</h4>
+                    <p className="text-gray-500 text-xs mt-1">
+                      {i === 0 ? t.heritage.item1Desc : i === 1 ? t.heritage.item2Desc : t.heritage.item3Desc}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+            <button className={`text-[#b8573e] text-xs font-bold tracking-widest uppercase flex items-center gap-2 hover:text-white transition-colors ${isRTL ? 'flex-row-reverse' : ''}`}>
+              {t.heritage.btn}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* ==========================================
+          SECTION 4: REVIEWS
+      ========================================== */}
+      <section id="reviews" className="py-24 px-8 md:px-16 lg:px-24 bg-[#111111] relative z-20">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-black text-[#e5d3b3] uppercase tracking-tight mb-4">{t.reviews.title}</h2>
+          <p className="text-gray-400 text-sm max-w-2xl mx-auto">{t.reviews.desc}</p>
+        </div>
+        <div className={`grid grid-cols-1 md:grid-cols-3 gap-8 ${isRTL ? 'text-right' : 'text-left'}`}>
+          {[t.reviews.r1, t.reviews.r2, t.reviews.r3].map((review, i) => (
+            <div key={i} className="bg-[#1a1a1a] p-8 rounded-2xl border border-gray-800">
+              <div className={`flex items-center gap-1 text-yellow-500 text-xs mb-4 ${isRTL ? 'justify-end' : ''}`}>{i === 2 ? '★★★★☆' : '★★★★★'}</div>
+              <p className="text-gray-300 text-sm leading-relaxed mb-6 italic">"{review}"</p>
+              <div className={`flex items-center gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+                <div className="w-10 h-10 rounded-full bg-gray-700 overflow-hidden">
+                  <img src={`https://images.unsplash.com/photo-${i === 0 ? '1494790108377-be9c29b29330' : i === 1 ? '1507003211169-0a1dd7228f2d' : '1438761681033-6461ffad8d80'}?q=80&w=150&auto=format&fit=crop`} alt="User" className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <h4 className="text-white text-xs font-bold uppercase tracking-wider">{i === 0 ? 'Zarmina A.' : i === 1 ? 'Ahmad F.' : 'Farid K.'}</h4>
+                  <span className="text-gray-500 text-[10px]">Verified Buyer</span>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ==========================================
+          SECTION 5: FOOTER
+      ========================================== */}
+      <footer className={`bg-[#0a0a0a] pt-20 pb-10 px-8 md:px-16 lg:px-24 relative z-20 border-t border-gray-800 ${isRTL ? 'text-right' : 'text-left'}`}>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+          <div className="lg:col-span-2">
+            <div className={`flex items-center gap-2 mb-6 ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <span className="text-[#b8573e] font-bold text-xl">//</span>
+              <span className="font-bold tracking-widest text-sm uppercase text-white">Afghan Shosee</span>
+            </div>
+            <p className="text-gray-400 text-sm max-w-sm mb-8">{t.footer.desc}</p>
+            <div className={`flex gap-2 max-w-sm ${isRTL ? 'flex-row-reverse' : ''}`}>
+              <input type="email" placeholder={t.footer.placeholder} className={`bg-[#1a1a1a] border border-gray-700 text-white text-xs px-4 py-3 rounded-lg w-full focus:outline-none focus:border-[#b8573e] transition-colors ${isRTL ? 'text-right' : 'text-left'}`} />
+              <button className="bg-[#b8573e] hover:bg-[#a04a32] text-white text-[10px] font-bold tracking-widest uppercase px-6 py-3 rounded-lg transition-colors whitespace-nowrap">{t.footer.subscribe}</button>
+            </div>
+          </div>
+          <div>
+            <h4 className="text-white text-xs font-bold uppercase tracking-widest mb-6">{t.footer.shop}</h4>
+            <ul className="space-y-3 text-gray-400 text-xs">
+              <li><a href="#" className="hover:text-[#b8573e] transition-colors">{t.heritage.item1Title}</a></li>
+              <li><a href="#" className="hover:text-[#b8573e] transition-colors">{t.heritage.item2Title}</a></li>
+              <li><a href="#" className="hover:text-[#b8573e] transition-colors">{t.heritage.item3Title}</a></li>
+              <li><a href="/cart" className="hover:text-[#b8573e] transition-colors">{t.nav.shop}</a></li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="text-white text-xs font-bold uppercase tracking-widest mb-6">{t.footer.support}</h4>
+            <ul className="space-y-3 text-gray-400 text-xs">
+              <li><a href="#" className="hover:text-[#b8573e] transition-colors">Help Center</a></li>
+              <li><a href="#" className="hover:text-[#b8573e] transition-colors">Shipping Info</a></li>
+              <li><a href="#" className="hover:text-[#b8573e] transition-colors">Returns & Exchanges</a></li>
+              <li><a href="#" className="hover:text-[#b8573e] transition-colors">Track Your Order</a></li>
+            </ul>
+          </div>
+        </div>
+        <div className={`flex flex-col md:flex-row justify-between items-center pt-8 border-t border-gray-800 gap-4 ${isRTL ? 'flex-row-reverse' : ''}`}>
+          <p className="text-gray-500 text-[10px] uppercase tracking-widest">&copy; {new Date().getFullYear()} Afghan Shosee. {t.footer.rights}</p>
+          <div className={`flex gap-6 text-[10px] uppercase tracking-widest text-gray-500 ${isRTL ? 'flex-row-reverse' : ''}`}>
+            <a href="#" className="hover:text-white transition-colors">{t.footer.privacy}</a>
+            <a href="#" className="hover:text-white transition-colors">{t.footer.terms}</a>
+          </div>
+        </div>
+      </footer>
+    </div>
   );
 }
